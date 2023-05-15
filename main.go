@@ -50,13 +50,15 @@ func verifyED(this js.Value, args []js.Value) any {
 
 	p, err := base64.RawURLEncoding.DecodeString(pub)
 	if err != nil {
-		fmt.Println(err)
-		return err
+		return map[string]any{
+			"valid": false,
+		}
 	}
 	s, err := base64.RawURLEncoding.DecodeString(sig)
 	if err != nil {
-		fmt.Println(err)
-		return err
+		return map[string]any{
+			"valid": false,
+		}
 	}
 
 	return map[string]any{

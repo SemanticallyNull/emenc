@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>wasm</title>
+
+    <script src="static/wasm_exec.js"></script>
+    <style>
+        body { box-sizing: border-box; }
+        table { border: 1px solid #000; margin: 0; width: 100%; }
+        table tr td, table tr th { border: 1px solid #000; padding: 1em; margin: 0; }
+        input[type=text], textarea { font-family: courier, fixed; padding: 1em; margin: 0; width: 80%; }
+    </style>
+</head>
+<body>
+    <table>
+        <tbody>
+            <tr><th>Pub</th><td><input type="text" id="pub"><button id="genkey">Generate Key</button></td></tr>
+            <tr><th>Priv</th><td><input type="text" id="pk"></td></tr>
+            <tr><th>Input</th><td><textarea id="input" rows="10"></textarea></td></tr>
+            <tr><th>Signature</th><td><textarea id="signature" rows="10"></textarea></td></tr>
+            <tr><th>Validity</th><td id="validity"></td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch("emenc.wasm"), go.importObject).then((result) => {
+            go.run(result.instance);
+
+            document.getElementById('genkey').addEventListener('click', () => {
+                let o = genEDKey();
+                document.getElementById('pub').value = o.pub
+                document.getElementById('pk').value = o.pk
+            })
+
+            document.getElementById('input').addEventListener('blur', (e) => {
+                if (document.getElementById('pk').value ===  "") {
+                    return
+                }
+
+                let s = signED(document.getElementById('pk').value, e.target.value)
+                document.getElementById('signature').value = s.signedMessage
+                document.getElementById('validity').innerText = "Valid"
+            })
+            document.getElementById('signature').addEventListener('blur', (e) => {
+                if (document.getElementById('pub').value ===  "" ||
+                    document.getElementById('input').value ===  "") {
+                    return
+                }
+
+                let v = verifyED(
+                    document.getElementById('pub').value,
+                    document.getElementById('input').value,
+                    document.getElementById('signature').value
+                )
+                if (v.valid) {
+                    document.getElementById('validity').innerText = "Valid"
+                } else {
+                    document.getElementById('validity').innerText = "Invalid"
+                }
+            })
+        });
+    </script>
+</body>
+</html>
